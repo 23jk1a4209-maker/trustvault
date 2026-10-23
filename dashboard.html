@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>TrustVault | Security Dashboard</title>
+    <style>
+        body { margin: 0; font-family: 'Segoe UI', Tahoma, sans-serif; background-color: #0B0F0D; color: #F9FAFB; display: flex; height: 100vh; }
+        .sidebar { width: 250px; background-color: #111915; border-right: 1px solid #26352D; padding: 20px; box-sizing: border-box; }
+        .sidebar h2 { color: #10B981; font-size: 20px; margin-bottom: 30px; }
+        .nav-link { display: block; color: #9CA3AF; text-decoration: none; padding: 10px 12px; margin-bottom: 8px; border-radius: 6px; font-size: 14px; }
+        .nav-link.active, .nav-link:hover { background-color: rgba(16, 185, 129, 0.1); color: #10B981; }
+        .main-content { flex-grow: 1; padding: 30px; overflow-y: auto; }
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #26352D; padding-bottom: 15px; margin-bottom: 25px; }
+        .role-badge { padding: 5px 12px; border-radius: 12px; font-size: 12px; font-weight: bold; background-color: #10B981; color: #0B0F0D; }
+        .cards-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 25px; }
+        .card { background-color: #111915; border: 1px solid #26352D; border-radius: 8px; padding: 20px; }
+        .card h4 { margin: 0; color: #9CA3AF; font-size: 13px; text-transform: uppercase; }
+        .card .number { font-size: 30px; color: #10B981; font-weight: bold; margin: 10px 0 0 0; }
+        .search-container { display: flex; gap: 10px; margin-bottom: 20px; align-items: center; }
+        .search-input { flex-grow: 1; padding: 10px 15px; background-color: #111915; border: 1px solid #26352D; border-radius: 6px; color: #F9FAFB; font-size: 14px; }
+        .btn-search { background-color: #111915; border: 1px solid #10B981; color: #10B981; padding: 10px 18px; border-radius: 6px; font-weight: bold; cursor: pointer; }
+        .btn-upload { background-color: #10B981; color: #0B0F0D; padding: 10px 20px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 14px; }
+        table { width: 100%; border-collapse: collapse; background-color: #111915; border: 1px solid #26352D; border-radius: 8px; }
+        th, td { padding: 14px; text-align: left; border-bottom: 1px solid #26352D; font-size: 14px; }
+        th { color: #9CA3AF; background-color: #0E1411; font-size: 12px; text-transform: uppercase; }
+        .badge { background-color: rgba(16, 185, 129, 0.2); color: #10B981; padding: 4px 8px; border-radius: 4px; font-size: 12px; }
+        .action-link { text-decoration: none; font-size: 13px; font-weight: 600; margin-right: 12px; }
+        .link-download { color: #10B981; }
+        .link-delete { color: #EF4444; }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <h2>🛡️ TrustVault</h2>
+        <a href="/dashboard" class="nav-link active">📊 Dashboard</a>
+        <a href="/logs" class="nav-link">📜 Activity Logs</a>
+        <a href="/upload" class="nav-link">📤 Upload File</a>
+        <hr style="border: 0; border-top: 1px solid #26352D; margin: 20px 0;">
+        <a href="/" class="nav-link" style="color: #EF4444;">🚪 Logout</a>
+    </div>
+
+    <div class="main-content">
+        <div class="header">
+            <div>
+                <h2 style="margin: 0;">Organization Security Hub</h2>
+                <small style="color: #9CA3AF;">Role-Based Access Management</small>
+            </div>
+            <div>
+                <span>{{ user_email }}</span>
+                <span class="role-badge">{{ user_role }}</span>
+            </div>
+        </div>
+
+        <div class="cards-grid">
+            <div class="card">
+                <h4>Total Documents</h4>
+                <div class="number">{{ documents|length }}</div>
+            </div>
+            <div class="card">
+                <h4>Access Level</h4>
+                <div class="number" style="font-size: 20px; margin-top: 15px;">{{ user_role }}</div>
+            </div>
+            <div class="card">
+                <h4>Security Status</h4>
+                <div class="number" style="font-size: 20px; margin-top: 15px;">ENFORCED</div>
+            </div>
+        </div>
+
+        <form action="/dashboard" method="GET" class="search-container">
+            <input type="text" name="search" class="search-input" placeholder="🔍 Search document title or category..." value="{{ search_query }}">
+            <button type="submit" class="btn-search">Filter</button>
+            <a href="/dashboard" style="color: #9CA3AF; text-decoration: none; font-size: 13px;">Clear</a>
+            <a href="/upload" class="btn-upload" style="margin-left: auto;">+ Upload Document</a>
+        </form>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Document Title</th>
+                    <th>Classification</th>
+                    <th>Filename</th>
+                    <th>Actions Allowed</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for doc in documents %}
+                <tr>
+                    <td><b>{{ doc.title }}</b></td>
+                    <td><span class="badge">{{ doc.category }}</span></td>
+                    <td>{{ doc.filename }}</td>
+                    <td>
+                        <a href="/download/{{ doc.filename }}" class="action-link link-download">📥 Download</a>
+                        <a href="/delete/{{ doc.filename }}" class="action-link link-delete" onclick="return confirm('Delete this file?')">🗑️ Delete</a>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="4" style="text-align: center; color: #9CA3AF; padding: 25px;">No files found. Click "+ Upload Document" to add one!</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>
